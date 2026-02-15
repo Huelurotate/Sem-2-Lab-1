@@ -1,23 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "functions.h"
 
 int main(int argc, char* argv[])
 {
-	FILE* bin_file;
-
-	if (!fopen_s(&bin_file, argv[1], "wb"))
-	{
-		printf("Invalid file name, please try again.");
-
-		char* new_filename;
-		str_input(&new_filename);
-
-		main(2, new_filename);
-	}
-
 	getchar();
 
-	fclose(bin_file);
+	char* filename = malloc(strlen(argv[1]) + 1);
+	strcpy_s(filename, (strlen(argv[1]) + 1), argv[1]);
+	check_filename(&filename);
+
+	FILE* bin_file;
+
+	menu(&bin_file, filename);
 
 	return 0;
 }
