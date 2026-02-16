@@ -19,11 +19,11 @@ void menu(FILE** file, char* filename)
 		switch (menu_choice)
 		{
 		case 1:
-			input(&file, filename, &total_numbers, &user_random_choice);
+			input(file, filename, &total_numbers, &user_random_choice);
 			break;
 		case 2:
 			if (total_numbers != 0)
-				output(&file, filename, total_numbers);
+				output(file, filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
@@ -67,7 +67,7 @@ void check_filename(char** filename)
 	while (len < EXTENSION_LEN || strcmp(".bin", (*filename + (len - EXTENSION_LEN))) != 0)
 	{
 		puts("Please, enter a filename with a .bin extension:");
-		str_input(filename);
+		filename_input(filename);
 		len = strlen(*(filename));
 	}
 }
@@ -90,9 +90,11 @@ void input(FILE** file, char* filename, int* total_numbers, int* user_random_cho
 void manual_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
 {
 	if ((total_numbers > 0 && user_input_choice) || total_numbers == 0)
-		file = fopen_s(file, filename, "wb");
+		*file = fopen(filename, "wb");
 	else
-		file = fopen_s(file, filename, "ab");
+		*file = fopen(filename, "ab");
+
+	file_opening_check(*file);
 
 	int* buffer = NULL;
 	puts("Enter the number to put into the file:");
@@ -113,6 +115,7 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 		}
 
 		buffer = realloc(buffer, (*total_numbers) * sizeof(int));
+		check_arr_alloc(buffer);
 		buffer[(*total_numbers)++] = num;
 	}
 
@@ -124,13 +127,17 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 void random_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
 {
 	if ((total_numbers > 0 && user_input_choice) || total_numbers == 0)
-		file = fopen_s(file, filename, "wb");
+		*file = fopen(filename, "wb");
 	else
-		file = fopen_s(file, filename, "ab");
+		*file = fopen(filename, "ab");
+
+	file_opening_check(*file);
 
 	int random_length = (rand() % (RAND_LEN_MAX - RAND_LEN_MIN + 1)) + RAND_LEN_MIN;
 
 	int* buffer = malloc(sizeof(int) * random_length);
+	check_arr_alloc(buffer);
+
 	for (int i = 0; i < random_length; i++)
 	{
 		buffer[i] = (rand() % (RAND_MAX - RAND_MIN + 1)) + RAND_MIN;
@@ -164,10 +171,13 @@ void choice_loop(int** choice_var)
 
 void output(FILE** file, char* filename, int total_numbers)
 {
-	file = fopen_s(file, filename, "rb");
-	int* buffer = malloc(sizeof(int) * total_numbers);
+	*file = fopen(filename, "rb");
+	file_opening_check(*file);
 
-	fread_s(buffer, sizeof(int) * total_numbers, sizeof(int), total_numbers, file);
+	int* buffer = malloc(sizeof(int) * total_numbers);
+	check_arr_alloc(buffer);
+
+	fread(buffer, sizeof(int), total_numbers, *file);
 
 	puts("Contents of the file are:");
 	for (int i = 0; i < total_numbers; i++)
@@ -177,7 +187,17 @@ void output(FILE** file, char* filename, int total_numbers)
 	fclose(file);
 }
 
-void str_input(char** str)
+void add_numbers(FILE** file, char* filename, int* total_numbers)
+{
+
+}
+
+void perform_reverse(FILE** file, char* filename, int* total_numbers)
+{
+
+}
+
+void filename_input(char** str)
 {
 	getchar();
 
@@ -193,11 +213,20 @@ void str_input(char** str)
 	(*str)[length] = '\0';
 }
 
-void file_opening_check(int* file)
+void file_opening_check(FILE* file)
 {
 	if (file == NULL)
 	{
 		puts("Failed to open the file.");
+		exit(1);
+	}
+}
+
+void check_arr_alloc(int* arr)
+{
+	if (arr == NULL)
+	{
+		puts("Memory Allocation Error.");
 		exit(1);
 	}
 }

@@ -5,8 +5,6 @@
 
 int main(int argc, char* argv[])
 {
-	getchar();
-
 	char* filename = malloc(strlen(argv[1]) + 1);
 	strcpy_s(filename, (strlen(argv[1]) + 1), argv[1]);
 	check_filename(&filename);
