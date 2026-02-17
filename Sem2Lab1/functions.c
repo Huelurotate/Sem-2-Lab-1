@@ -72,12 +72,23 @@ void menu(FILE** file, char* filename)
 			break;
 		case 3:
 			if (total_numbers != 0)
-				continue;
+				count_unique(file, filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 4:
-			// free_str(str, &length);
+			if (total_numbers != 0)
+				insert_numbers(file, filename, &total_numbers);
+			else
+				puts("\nThe file is empty.");
+			break;
+		case 5:
+			if (total_numbers != 0)
+				perform_reverse(file, filename, total_numbers);
+			else
+				puts("\nThe file is empty.");
+			break;
+		case 6:
 			is_running = 0;
 		}
 	}
@@ -87,17 +98,19 @@ void print_menu()
 {
 	puts("\n      MENU\n"
 		"Choose an option:\n"
-		"1 - Input Data\n"
-		"2 - Output Data\n"
-		"3 - Add Numbers To The File\n"
-		"4 - Reverse File Contents\n"
-		"5 - Exit Program");
+		"1 - Input Numbers\n"
+		"2 - Print File Contents\n"
+		"3 - Count Unique Numbers\n"
+		"4 - Insert Numbers Into The File\n"
+		"5 - Reverse File Contents\n"
+		"6 - Exit Program");
 }
 
 void option_choice(int* choice)
 {
 	while (scanf_s("%d", choice) != 1 || \
-		(*choice != 1 && *choice != 2 && *choice != 3 && *choice != 4))
+		(*choice != 1 && *choice != 2 && *choice != 3 && \
+			*choice != 4 && *choice != 5 && *choice != 6))
 	{
 		puts("Invalid Input.");
 		rewind(stdin);
@@ -120,15 +133,26 @@ void input(FILE** file, char* filename, int* total_numbers)
 		manual_input(file, filename, total_numbers, user_input_choice);
 }
 
+
+// SOMETHING DOES NOT WORK
 void manual_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
 {
+	int last_element;
+
 	if ((*total_numbers > 0 && user_input_choice == WRITE_CHOICE) || *total_numbers == 0)
+	{
 		*file = fopen(filename, "wb");
+		*total_numbers = 0;
+		last_element = NULL;
+	}
 	else
-		*file = fopen(filename, "ab");
+	{
+		*file = fopen(filename, "ab+");
+		find_last_element(file, &last_element);
+	}
 
 	file_opening_check(*file);
-	
+
 	while (1)
 	{
 		getchar();
@@ -143,11 +167,14 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 		ungetc(char_input, stdin);
 
 		int num;
-		while (scanf_s("%d", &num) != 1)
+		while (scanf_s("%d", &num) != 1 || \
+			(last_element != NULL && num > last_element))
 		{
-			puts("Invalid Input.");
+			printf("Invalid Input. Enter a number less or equal to %d\n", last_element);
 			rewind(stdin);
 		}
+
+		last_element = num;
 
 		fwrite(&num, sizeof(int), 1, *file);
 		(*total_numbers)++;
@@ -158,10 +185,19 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 
 void random_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
 {
+	int max_num;
+
 	if ((*total_numbers > 0 && user_input_choice == WRITE_CHOICE) || *total_numbers == 0)
+	{
 		*file = fopen(filename, "wb");
+		*total_numbers = 0;
+		max_num = RAND_MAX;
+	}
 	else
-		*file = fopen(filename, "ab");
+	{
+		*file = fopen(filename, "ab+");
+		find_last_element(file, &max_num);
+	}
 
 	file_opening_check(*file);
 
@@ -170,8 +206,9 @@ void random_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 
 	for (int i = 0; i < random_length; i++)
 	{
-		random_num = (rand() % (RAND_MAX - RAND_MIN + 1)) + RAND_MIN;
+		random_num = (rand() % (max_num - RAND_MIN + 1)) + RAND_MIN;
 		fwrite(&random_num, sizeof(int), 1, *file);
+		max_num = random_num;
 	}
 
 	*total_numbers += random_length;
@@ -201,6 +238,13 @@ void choice_loop(int* choice_var)
 	}
 }
 
+void find_last_element(FILE** file, int* last_element_var)
+{
+	fseek(*file, (0 - sizeof(int)), SEEK_END);
+	fread(last_element_var, sizeof(int), 1, *file);
+	fseek(*file, 0, SEEK_END);
+}
+
 void output(FILE** file, char* filename, int total_numbers)
 {
 	*file = fopen(filename, "rb");
@@ -220,15 +264,32 @@ void output(FILE** file, char* filename, int total_numbers)
 
 void count_unique(FILE** file, char* filename, int total_numbers)
 {
+	file = fopen(filename, "rb");
+	int previous_num, current_num, total_unique = 1;
 
+	fread(&previous_num, sizeof(int), 1, *file);
+	puts("\nUnique numbers:");
+	printf("%d\n", previous_num);
+	for (int i = 1; i < total_numbers; i++)
+	{
+		fread(&current_num, sizeof(int), 1, *file);
+		if (current_num != previous_num)
+		{
+			total_unique++;
+			printf("%d", current_num);
+			previous_num = current_num;
+		}
+	}
+
+	printf("\nTotal unique numbers: %d\n", total_unique);
 }
 
-void add_numbers(FILE** file, char* filename, int* total_numbers)
+void insert_numbers(FILE** file, char* filename, int* total_numbers)
 {
 
 }
 
-void perform_reverse(FILE** file, char* filename, int* total_numbers)
+void perform_reverse(FILE** file, char* filename, int total_numbers)
 {
 
 }
