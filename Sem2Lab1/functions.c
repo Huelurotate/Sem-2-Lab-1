@@ -52,7 +52,6 @@ void menu(FILE** file, char* filename)
 {
 	int menu_choice, is_running = 1;
 	int total_numbers = 0;
-	int user_random_choice;
 
 	srand(time(NULL));
 
@@ -63,7 +62,7 @@ void menu(FILE** file, char* filename)
 		switch (menu_choice)
 		{
 		case 1:
-			input(file, filename, &total_numbers, &user_random_choice);
+			input(file, filename, &total_numbers);
 			break;
 		case 2:
 			if (total_numbers != 0)
@@ -105,16 +104,17 @@ void option_choice(int* choice)
 	}
 }
 
-void input(FILE** file, char* filename, int* total_numbers, int* user_random_choice)
+void input(FILE** file, char* filename, int* total_numbers)
 {
 	int user_input_choice = WRITE_CHOICE;
+	int user_random_choice;
 
 	if (*total_numbers != 0)
 		input_choice(&user_input_choice);
 
-	random_choice(user_random_choice);
+	random_choice(&user_random_choice);
 
-	if (random_choice)
+	if (user_random_choice)
 		random_input(file, filename, total_numbers, user_input_choice);
 	else
 		manual_input(file, filename, total_numbers, user_input_choice);
@@ -122,18 +122,19 @@ void input(FILE** file, char* filename, int* total_numbers, int* user_random_cho
 
 void manual_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
 {
-	if ((total_numbers > 0 && user_input_choice) || total_numbers == 0)
+	if ((*total_numbers > 0 && user_input_choice == WRITE_CHOICE) || *total_numbers == 0)
 		*file = fopen(filename, "wb");
 	else
 		*file = fopen(filename, "ab");
 
 	file_opening_check(*file);
-
-
-	int* buffer = NULL;
-	puts("Enter a number to put into the file:");
+	
 	while (1)
 	{
+		getchar();
+
+		puts("\nEnter a number to put into the file:");
+
 		char char_input = getchar();
 
 		if (char_input == '\n')
@@ -149,20 +150,15 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 		}
 
 		fwrite(&num, sizeof(int), 1, *file);
-		*total_numbers++;
-		/*buffer = realloc(buffer, (*total_numbers) * sizeof(int));
-		check_arr_alloc(buffer);
-		buffer[(*total_numbers)++] = num;*/
+		(*total_numbers)++;
 	}
 
-	/*fwrite(buffer, sizeof(int), total_numbers, *file);*/
-	//free(buffer);
-	fclose(file);
+	fclose(*file);
 }
 
 void random_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
 {
-	if ((total_numbers > 0 && user_input_choice) || total_numbers == 0)
+	if ((*total_numbers > 0 && user_input_choice == WRITE_CHOICE) || *total_numbers == 0)
 		*file = fopen(filename, "wb");
 	else
 		*file = fopen(filename, "ab");
@@ -170,35 +166,35 @@ void random_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 	file_opening_check(*file);
 
 	int random_length = (rand() % (RAND_LEN_MAX - RAND_LEN_MIN + 1)) + RAND_LEN_MIN;
-
-	int* buffer = malloc(sizeof(int) * random_length);
-	check_arr_alloc(buffer);
+	int random_num;
 
 	for (int i = 0; i < random_length; i++)
 	{
-		buffer[i] = (rand() % (RAND_MAX - RAND_MIN + 1)) + RAND_MIN;
+		random_num = (rand() % (RAND_MAX - RAND_MIN + 1)) + RAND_MIN;
+		fwrite(&random_num, sizeof(int), 1, *file);
 	}
 
-	fwrite(buffer, sizeof(int), random_length, *file);
-	free(buffer);
+	*total_numbers += random_length;
 	fclose(*file);
+
+	puts("\nRandom numbers have been added to the file.");
 }
 
 void input_choice(int* choice)
 {
-	printf("Would like to write or append to the file?(1 - Write, 0 - Append): ");
-	choice_loop(&choice);
+	printf("\nWould like to write or append to the file?(1 - Write, 0 - Append): ");
+	choice_loop(choice);
 }
 
 void random_choice(int* choice)
 {
-	printf("\nFill the file with random numbers?(1 - yes, 0 - no): ");
-	choice_loop(&choice);
+	printf("\nFill the file with random numbers?(1 - Yes, 0 - No): ");
+	choice_loop(choice);
 }
 
-void choice_loop(int** choice_var)
+void choice_loop(int* choice_var)
 {
-	while (scanf_s("%d", *choice_var) != 1 || (**choice_var != 0 && **(choice_var) != 1))
+	while (scanf_s("%d", choice_var) != 1 || (*choice_var != 0 && *choice_var != 1))
 	{
 		puts("Invalid Input.");
 		rewind(stdin);
@@ -210,17 +206,21 @@ void output(FILE** file, char* filename, int total_numbers)
 	*file = fopen(filename, "rb");
 	file_opening_check(*file);
 
-	int* buffer = malloc(sizeof(int) * total_numbers);
-	check_arr_alloc(buffer);
-
-	fread(buffer, sizeof(int), total_numbers, *file);
+	int num;
 
 	puts("Contents of the file are:");
 	for (int i = 0; i < total_numbers; i++)
-		printf("%d\n", buffer[i]);
+	{
+		fread(&num, sizeof(int), 1, *file);
+		printf("%d\n", num);
+	}
 
-	free(buffer);
-	fclose(file);
+	fclose(*file);
+}
+
+void count_unique(FILE** file, char* filename, int total_numbers)
+{
+
 }
 
 void add_numbers(FILE** file, char* filename, int* total_numbers)
