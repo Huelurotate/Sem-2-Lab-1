@@ -6,8 +6,16 @@
 
 void create_filename(char** filename_var, char* user_input)
 {
-	*filename_var = malloc(strlen(user_input) + 1);
-	strcpy_s(*filename_var, strlen(user_input) + 1, user_input);
+	if (user_input != NULL)
+	{
+		*filename_var = malloc(strlen(user_input) + 1);
+		strcpy_s(*filename_var, strlen(user_input) + 1, user_input);
+	}
+	else
+	{
+		*filename_var = NULL;
+	}
+
 	check_filename(filename_var);
 }
 
@@ -16,7 +24,7 @@ void check_filename(char** filename)
 	int len;
 	while (1)
 	{
-		len = strlen(*filename);
+		len = (*filename == NULL) ? 0 : strlen(*filename);
 
 		if (len >= EXTENSION_LEN && strcmp(".bin", (*filename + (len - EXTENSION_LEN))) == 0)
 			break;
@@ -121,8 +129,9 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 
 	file_opening_check(*file);
 
+
 	int* buffer = NULL;
-	puts("Enter the number to put into the file:");
+	puts("Enter a number to put into the file:");
 	while (1)
 	{
 		char char_input = getchar();
@@ -139,13 +148,15 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 			rewind(stdin);
 		}
 
-		buffer = realloc(buffer, (*total_numbers) * sizeof(int));
+		fwrite(&num, sizeof(int), 1, *file);
+		*total_numbers++;
+		/*buffer = realloc(buffer, (*total_numbers) * sizeof(int));
 		check_arr_alloc(buffer);
-		buffer[(*total_numbers)++] = num;
+		buffer[(*total_numbers)++] = num;*/
 	}
 
-	fwrite(buffer, sizeof(int), total_numbers, *file);
-	free(buffer);
+	/*fwrite(buffer, sizeof(int), total_numbers, *file);*/
+	//free(buffer);
 	fclose(file);
 }
 
@@ -170,7 +181,7 @@ void random_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 
 	fwrite(buffer, sizeof(int), random_length, *file);
 	free(buffer);
-	fclose(file);
+	fclose(*file);
 }
 
 void input_choice(int* choice)

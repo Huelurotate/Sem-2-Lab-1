@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[])
 {
-	char* filename;
+	char* filename; // FREE IT!!!
 	create_filename(&filename, argv[1]);
 
 	FILE* bin_file;
