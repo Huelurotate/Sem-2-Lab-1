@@ -1,8 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
+#include <string.h>
 #include "functions.h"
+
+void create_filename(char** filename_var, char* user_input)
+{
+	*filename_var = malloc(strlen(user_input) + 1);
+	strcpy_s(*filename_var, strlen(user_input) + 1, user_input);
+	check_filename(filename_var);
+}
+
+void check_filename(char** filename)
+{
+	int len;
+	while (1)
+	{
+		len = strlen(*filename);
+
+		if (len >= EXTENSION_LEN && strcmp(".bin", (*filename + (len - EXTENSION_LEN))) == 0)
+			break;
+
+		puts("Please, enter a filename with a .bin extension:");
+		filename_input(filename, &len);
+	}
+}
+
+void filename_input(char** str, int* length)
+{
+	*length = 0;
+	char c;
+	while ((c = getchar()) != '\n')
+	{
+		(*length)++;
+		*str = realloc(*str, (*length + 1) * sizeof(char));
+		(*str)[*length - 1] = c;
+	}
+
+	(*str)[*length] = '\0';
+}
 
 void menu(FILE** file, char* filename)
 {
@@ -58,17 +94,6 @@ void option_choice(int* choice)
 	{
 		puts("Invalid Input.");
 		rewind(stdin);
-	}
-}
-
-void check_filename(char** filename)
-{
-	int len = strlen(*filename);
-	while (len < EXTENSION_LEN || strcmp(".bin", (*filename + (len - EXTENSION_LEN))) != 0)
-	{
-		puts("Please, enter a filename with a .bin extension:");
-		filename_input(filename);
-		len = strlen(*(filename));
 	}
 }
 
@@ -197,22 +222,6 @@ void perform_reverse(FILE** file, char* filename, int* total_numbers)
 
 }
 
-void filename_input(char** str)
-{
-	getchar();
-
-	int length = 0;
-	char c;
-	while ((c = getchar()) != '\n')
-	{
-		length++;
-		*str = realloc(*str, (length + 1) * sizeof(char));
-		(*str)[length - 1] = c;
-	}
-
-	(*str)[length] = '\0';
-}
-
 void file_opening_check(FILE* file)
 {
 	if (file == NULL)
@@ -230,3 +239,4 @@ void check_arr_alloc(int* arr)
 		exit(1);
 	}
 }
+
