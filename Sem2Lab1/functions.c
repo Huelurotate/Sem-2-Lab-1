@@ -76,25 +76,25 @@ void menu(char* filename)
 			input(filename, &total_numbers);
 			break;
 		case 2:
-			if (total_numbers > 0)
+			if (total_numbers != 0)
 				output(filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 3:
-			if (total_numbers > 0)
+			if (total_numbers != 0)
 				count_unique(filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 4:
-			if (total_numbers > 0)
+			if (total_numbers != 0)
 				insert_numbers(filename, &total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 5:
-			if (total_numbers > 0)
+			if (total_numbers != 0)
 				perform_reverse(filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
@@ -202,7 +202,7 @@ void random_input(char* filename, int* total_numbers, int user_input_choice)
 
 	if (max_num < RAND_MIN)
 	{
-		puts("\nThe last element of the file exceeds the random limits.");
+		puts("\nThe last element of the file exceeds the bottom random limit.");
 		return;
 	}
 
@@ -225,7 +225,7 @@ void random_input(char* filename, int* total_numbers, int user_input_choice)
 
 void input_choice(int* choice)
 {
-	printf("\nWould like to write or append to the file?(1 - Write, 0 - Append): ");
+	printf("\nWrite or Append to the file?(1 - Write, 0 - Append): ");
 	choice_loop(choice);
 }
 
@@ -256,9 +256,7 @@ void select_open_mode(FILE** file,
 		
 		*file = fopen(filename_var, "wb");
 		file_opening_check(*file);
-		
 		*total_numbers_value = 0;
-		
 		*has_last_element = 0;
 	}
 	else if (*total_numbers_value != 0 && user_input_var == APPEND_CHOICE)
@@ -322,7 +320,91 @@ void count_unique(char* filename, int total_numbers)
 
 void insert_numbers(char* filename, int* total_numbers)
 {
+	int user_random_choice;
+	printf("\nInsert random numbers into the file?(1 - Yes, 0 - No): ");
+	choice_loop(&user_random_choice);
 
+	if (user_random_choice)
+		random_insert(filename, total_numbers);
+	else
+		manual_insert(filename, total_numbers);
+
+	bubble_sort(filename, *total_numbers);
+	puts("Numbers have been inserted into the file.");
+}
+
+void manual_insert(char* filename, int* total_numbers)
+{
+	FILE* bin_file = fopen(filename, "ab");
+
+	file_opening_check(bin_file);
+
+	while (1)
+	{
+		getchar();
+
+		puts("\nEnter a number to insert into the file:");
+
+		char char_input = getchar();
+
+		if (char_input == '\n')
+			break;
+
+		ungetc(char_input, stdin);
+
+		int num;
+		while (scanf_s("%d", &num) != 1)
+		{
+			printf("Invalid Input.\n");
+			rewind(stdin);
+		}
+
+		fwrite(&num, sizeof(int), 1, bin_file);
+		(*total_numbers)++;
+	}
+
+	fclose(bin_file);
+}
+
+void random_insert(char* filename, int* total_numbers)
+{
+	FILE* bin_file = fopen(filename, "ab");
+
+	file_opening_check(bin_file);
+
+	int random_length = (rand() % (RAND_LEN_MAX - RAND_LEN_MIN + 1)) + RAND_LEN_MIN;
+	int random_num;
+
+	for (int i = 0; i < random_length; i++)
+	{
+		random_num = (rand() % (RAND_MAX - RAND_MIN + 1)) + RAND_MIN;
+		fwrite(&random_num, sizeof(int), 1, bin_file);
+	}
+
+	*total_numbers += random_length;
+
+	fclose(bin_file);
+
+	puts("\nRandom numbers have been inserted into the file.");
+}
+
+void bubble_sort(char* filename, int total_numbers)
+{
+	FILE* bin_file = fopen(filename, "rb");
+	int x1 = 0, x2 = 0;
+	for (int i = 0; i < total_numbers; i++)
+	{
+		fread(x1, sizeof(int), 1, bin_file);
+		fread(x2, sizeof(int), 1, bin_file);
+		if (x2 > x1)
+		{
+			fseek(bin_file, (0 - sizeof(int) * 2), SEEK_CUR);
+			fwrite(&x2, sizeof(int), 1, bin_file);
+			fwrite(&x1, sizeof(int), 1, bin_file);
+			fseek(bin_file, (0 - sizeof(int) * 2), SEEK_CUR);
+		}
+		fseek(bin_file, sizeof(int), SEEK_CUR);
+	}
 }
 
 void perform_reverse(char* filename, int total_numbers)

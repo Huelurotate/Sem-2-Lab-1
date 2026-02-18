@@ -36,6 +36,9 @@ void output(char* filename, int total_numbers);
 void count_unique(char* filename, int total_numbers);
 
 void insert_numbers(char* filename, int* total_numbers);
+void manual_insert(char* filename, int* total_numbers);
+void random_insert(char* filename, int* total_numbers);
+void bubble_sort(char* filename, int total_numbers);
 
 void perform_reverse(char* filename, int total_numbers);
 
