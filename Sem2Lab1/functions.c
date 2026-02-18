@@ -200,6 +200,12 @@ void random_input(char* filename, int* total_numbers, int user_input_choice)
 
 	file_opening_check(bin_file);
 
+	if (max_num < RAND_MIN)
+	{
+		puts("\nThe last element of the file exceeds the random limits.");
+		return;
+	}
+
 	int random_length = (rand() % (RAND_LEN_MAX - RAND_LEN_MIN + 1)) + RAND_LEN_MIN;
 	int random_num;
 
