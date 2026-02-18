@@ -9,27 +9,34 @@
 void create_filename(char** filename_var, char* user_input);
 void check_filename(char** filename);
 void filename_input(char** str, int* length);
+void check_char_alloc(char* str);
 
-void menu(FILE** file, char* filename);
+void menu(char* filename);
 void print_menu();
 void option_choice(int* choice);
 
-void input(FILE** file, char* filename, int* total_numbers);
-void manual_input(FILE** file, char* filename, int* total_numbers, int user_input_choice);
-void random_input(FILE** file, char* filename, int* total_numbers, int user_input_choice);
+void input(char* filename, int* total_numbers);
+void manual_input(char* filename, int* total_numbers, int user_input_choice);
+void random_input(char* filename, int* total_numbers, int user_input_choice);
 
 void input_choice(int* choice);
 void random_choice(int* choice);
 void choice_loop(int* choice_var);
+
+void select_open_mode(FILE** file,
+					  char* filename_var,
+					  int* total_numbers_value,
+					  int user_input_var,
+					  int* last_element_var,
+					  int* has_last_element);
 void find_last_element(FILE** file, int* last_element_var);
 
-void output(FILE** file, char* filename, int total_numbers);
+void output(char* filename, int total_numbers);
 
-void count_unique(FILE**, char* filename, int total_numbers);
+void count_unique(char* filename, int total_numbers);
 
-void insert_numbers(FILE** file, char* filename, int* total_numbers);
+void insert_numbers(char* filename, int* total_numbers);
 
-void perform_reverse(FILE** file, char* filename, int total_numbers);
+void perform_reverse(char* filename, int total_numbers);
 
 void file_opening_check(FILE* file);
-void check_arr_alloc(int* arr);

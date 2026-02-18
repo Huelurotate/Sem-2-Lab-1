@@ -9,6 +9,7 @@ void create_filename(char** filename_var, char* user_input)
 	if (user_input != NULL)
 	{
 		*filename_var = malloc(strlen(user_input) + 1);
+		check_char_alloc(*filename_var);
 		strcpy_s(*filename_var, strlen(user_input) + 1, user_input);
 	}
 	else
@@ -42,13 +43,23 @@ void filename_input(char** str, int* length)
 	{
 		(*length)++;
 		*str = realloc(*str, (*length + 1) * sizeof(char));
+		check_char_alloc(*str);
 		(*str)[*length - 1] = c;
 	}
 
 	(*str)[*length] = '\0';
 }
 
-void menu(FILE** file, char* filename)
+void check_char_alloc(char* memory_block)
+{
+	if (memory_block == NULL)
+	{
+		puts("Memory allocation error.");
+		exit(1);
+	}
+}
+
+void menu(char* filename)
 {
 	int menu_choice, is_running = 1;
 	int total_numbers = 0;
@@ -62,34 +73,35 @@ void menu(FILE** file, char* filename)
 		switch (menu_choice)
 		{
 		case 1:
-			input(file, filename, &total_numbers);
+			input(filename, &total_numbers);
 			break;
 		case 2:
-			if (total_numbers != 0)
-				output(file, filename, total_numbers);
+			if (total_numbers > 0)
+				output(filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 3:
-			if (total_numbers != 0)
-				count_unique(file, filename, total_numbers);
+			if (total_numbers > 0)
+				count_unique(filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 4:
-			if (total_numbers != 0)
-				insert_numbers(file, filename, &total_numbers);
+			if (total_numbers > 0)
+				insert_numbers(filename, &total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 5:
-			if (total_numbers != 0)
-				perform_reverse(file, filename, total_numbers);
+			if (total_numbers > 0)
+				perform_reverse(filename, total_numbers);
 			else
 				puts("\nThe file is empty.");
 			break;
 		case 6:
 			is_running = 0;
+			break;
 		}
 	}
 }
@@ -108,16 +120,14 @@ void print_menu()
 
 void option_choice(int* choice)
 {
-	while (scanf_s("%d", choice) != 1 || \
-		(*choice != 1 && *choice != 2 && *choice != 3 && \
-			*choice != 4 && *choice != 5 && *choice != 6))
+	while (scanf_s("%d", choice) != 1 || *choice < 1 || *choice > 6)
 	{
 		puts("Invalid Input.");
 		rewind(stdin);
 	}
 }
 
-void input(FILE** file, char* filename, int* total_numbers)
+void input(char* filename, int* total_numbers)
 {
 	int user_input_choice = WRITE_CHOICE;
 	int user_random_choice;
@@ -128,35 +138,26 @@ void input(FILE** file, char* filename, int* total_numbers)
 	random_choice(&user_random_choice);
 
 	if (user_random_choice)
-		random_input(file, filename, total_numbers, user_input_choice);
+		random_input(filename, total_numbers, user_input_choice);
 	else
-		manual_input(file, filename, total_numbers, user_input_choice);
+		manual_input(filename, total_numbers, user_input_choice);
 }
 
-
-// SOMETHING DOES NOT WORK
-void manual_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
+void manual_input(char* filename, int* total_numbers, int user_input_choice)
 {
-	int last_element;
+	FILE* bin_file;
+	int last_element = 0;
+	int has_last_element = 0;
+	
+	select_open_mode(&bin_file, filename, total_numbers, \
+					 user_input_choice, &last_element, &has_last_element);
 
-	if ((*total_numbers > 0 && user_input_choice == WRITE_CHOICE) || *total_numbers == 0)
-	{
-		*file = fopen(filename, "wb");
-		*total_numbers = 0;
-		last_element = NULL;
-	}
-	else
-	{
-		*file = fopen(filename, "ab+");
-		find_last_element(file, &last_element);
-	}
-
-	file_opening_check(*file);
+	file_opening_check(bin_file);
 
 	while (1)
 	{
 		getchar();
-
+		
 		puts("\nEnter a number to put into the file:");
 
 		char char_input = getchar();
@@ -168,38 +169,36 @@ void manual_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 
 		int num;
 		while (scanf_s("%d", &num) != 1 || \
-			(last_element != NULL && num > last_element))
+			(has_last_element && num > last_element))
 		{
-			printf("Invalid Input. Enter a number less or equal to %d\n", last_element);
+			if (has_last_element)
+				printf("Invalid Input. Enter a number less or equal to %d\n", last_element);
+			else
+				printf("Invalid Input.\n");
+				
 			rewind(stdin);
 		}
 
 		last_element = num;
+		has_last_element = 1;
 
-		fwrite(&num, sizeof(int), 1, *file);
+		fwrite(&num, sizeof(int), 1, bin_file);
 		(*total_numbers)++;
 	}
 
-	fclose(*file);
+	fclose(bin_file);
 }
 
-void random_input(FILE** file, char* filename, int* total_numbers, int user_input_choice)
+void random_input(char* filename, int* total_numbers, int user_input_choice)
 {
-	int max_num;
+	FILE* bin_file;
+	int max_num = RAND_MAX;
+	int has_last_element = 0;
 
-	if ((*total_numbers > 0 && user_input_choice == WRITE_CHOICE) || *total_numbers == 0)
-	{
-		*file = fopen(filename, "wb");
-		*total_numbers = 0;
-		max_num = RAND_MAX;
-	}
-	else
-	{
-		*file = fopen(filename, "ab+");
-		find_last_element(file, &max_num);
-	}
+	select_open_mode(&bin_file, filename, total_numbers, \
+					 user_input_choice, &max_num, &has_last_element);
 
-	file_opening_check(*file);
+	file_opening_check(bin_file);
 
 	int random_length = (rand() % (RAND_LEN_MAX - RAND_LEN_MIN + 1)) + RAND_LEN_MIN;
 	int random_num;
@@ -207,12 +206,13 @@ void random_input(FILE** file, char* filename, int* total_numbers, int user_inpu
 	for (int i = 0; i < random_length; i++)
 	{
 		random_num = (rand() % (max_num - RAND_MIN + 1)) + RAND_MIN;
-		fwrite(&random_num, sizeof(int), 1, *file);
+		fwrite(&random_num, sizeof(int), 1, bin_file);
 		max_num = random_num;
 	}
 
 	*total_numbers += random_length;
-	fclose(*file);
+
+	fclose(bin_file);
 
 	puts("\nRandom numbers have been added to the file.");
 }
@@ -238,6 +238,32 @@ void choice_loop(int* choice_var)
 	}
 }
 
+void select_open_mode(FILE** file, 
+					  char* filename_var, 
+					  int* total_numbers_value,
+					  int user_input_var, 
+					  int* last_element_var, 
+					  int* has_last_element)
+{
+	if ((*total_numbers_value != 0 && user_input_var == WRITE_CHOICE) || *total_numbers_value == 0)
+	{
+		
+		*file = fopen(filename_var, "wb");
+		file_opening_check(*file);
+		
+		*total_numbers_value = 0;
+		
+		*has_last_element = 0;
+	}
+	else if (*total_numbers_value != 0 && user_input_var == APPEND_CHOICE)
+	{
+		*file = fopen(filename_var, "ab+");
+		file_opening_check(*file);
+		find_last_element(file, last_element_var);
+		*has_last_element = 1;
+	}
+}
+
 void find_last_element(FILE** file, int* last_element_var)
 {
 	fseek(*file, (0 - sizeof(int)), SEEK_END);
@@ -245,51 +271,55 @@ void find_last_element(FILE** file, int* last_element_var)
 	fseek(*file, 0, SEEK_END);
 }
 
-void output(FILE** file, char* filename, int total_numbers)
+void output(char* filename, int total_numbers)
 {
-	*file = fopen(filename, "rb");
-	file_opening_check(*file);
+	FILE* bin_file = fopen(filename, "rb");
+	file_opening_check(bin_file);
 
 	int num;
 
 	puts("Contents of the file are:");
 	for (int i = 0; i < total_numbers; i++)
 	{
-		fread(&num, sizeof(int), 1, *file);
+		fread(&num, sizeof(int), 1, bin_file);
 		printf("%d\n", num);
 	}
 
-	fclose(*file);
+	fclose(bin_file);
 }
 
-void count_unique(FILE** file, char* filename, int total_numbers)
+void count_unique(char* filename, int total_numbers)
 {
-	file = fopen(filename, "rb");
+	FILE* bin_file = fopen(filename, "rb");
+	file_opening_check(bin_file);
+
 	int previous_num, current_num, total_unique = 1;
 
-	fread(&previous_num, sizeof(int), 1, *file);
+	fread(&previous_num, sizeof(int), 1, bin_file);
 	puts("\nUnique numbers:");
 	printf("%d\n", previous_num);
 	for (int i = 1; i < total_numbers; i++)
 	{
-		fread(&current_num, sizeof(int), 1, *file);
+		fread(&current_num, sizeof(int), 1, bin_file);
 		if (current_num != previous_num)
 		{
 			total_unique++;
-			printf("%d", current_num);
+			printf("%d\n", current_num);
 			previous_num = current_num;
 		}
 	}
 
 	printf("\nTotal unique numbers: %d\n", total_unique);
+
+	fclose(bin_file);
 }
 
-void insert_numbers(FILE** file, char* filename, int* total_numbers)
+void insert_numbers(char* filename, int* total_numbers)
 {
 
 }
 
-void perform_reverse(FILE** file, char* filename, int total_numbers)
+void perform_reverse(char* filename, int total_numbers)
 {
 
 }
@@ -302,13 +332,3 @@ void file_opening_check(FILE* file)
 		exit(1);
 	}
 }
-
-void check_arr_alloc(int* arr)
-{
-	if (arr == NULL)
-	{
-		puts("Memory Allocation Error.");
-		exit(1);
-	}
-}
-

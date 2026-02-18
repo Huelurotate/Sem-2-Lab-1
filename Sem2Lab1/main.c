@@ -3,12 +3,12 @@
 
 int main(int argc, char* argv[])
 {
-	char* filename; // FREE IT!!!
+	char* filename;
 	create_filename(&filename, argv[1]);
 
-	FILE* bin_file;
+	menu(filename);
 
-	menu(&bin_file, filename);
+	free(filename);
 
 	return 0;
 }
