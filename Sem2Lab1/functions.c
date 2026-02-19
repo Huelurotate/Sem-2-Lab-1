@@ -12,10 +12,7 @@ void create_filename(char** filename_var, char* user_input)
 		check_char_alloc(*filename_var);
 		strcpy_s(*filename_var, strlen(user_input) + 1, user_input);
 	}
-	else
-	{
-		*filename_var = NULL;
-	}
+	else *filename_var = NULL;
 
 	check_filename(filename_var);
 }
@@ -219,7 +216,6 @@ void random_input(char* filename, int* total_numbers, int user_input_choice)
 	*total_numbers += random_length;
 
 	fclose(bin_file);
-
 	puts("\nRandom numbers have been added to the file.");
 }
 
@@ -253,7 +249,6 @@ void select_open_mode(FILE** file,
 {
 	if ((*total_numbers_value != 0 && user_input_var == WRITE_CHOICE) || *total_numbers_value == 0)
 	{
-		
 		*file = fopen(filename_var, "wb");
 		file_opening_check(*file);
 		*total_numbers_value = 0;
@@ -280,9 +275,9 @@ void output(char* filename, int total_numbers)
 	FILE* bin_file = fopen(filename, "rb");
 	file_opening_check(bin_file);
 
-	int num;
-
 	puts("Contents of the file are:");
+
+	int num;
 	for (int i = 0; i < total_numbers; i++)
 	{
 		fread(&num, sizeof(int), 1, bin_file);
@@ -313,9 +308,8 @@ void count_unique(char* filename, int total_numbers)
 		}
 	}
 
-	printf("\nTotal unique numbers: %d\n", total_unique);
-
 	fclose(bin_file);
+	printf("\nTotal unique numbers: %d\n", total_unique);
 }
 
 void insert_numbers(char* filename, int* total_numbers)
@@ -382,7 +376,6 @@ void random_insert(char* filename, int* total_numbers)
 	*total_numbers += random_length;
 
 	fclose(bin_file);
-
 	puts("\nRandom numbers have been inserted into the file.");
 }
 
@@ -424,8 +417,26 @@ void bubble_sort(char* filename, int total_numbers)
 void perform_reverse(char* filename, int total_numbers)
 {
 	FILE* bin_file = fopen(filename, "rb+");
+	int x1, x2;
+	for (int i = 0; i < total_numbers / 2; i++)
+	{
+		// Seeking
+		fseek(bin_file, sizeof(int) * i, SEEK_SET);
+		fread(&x1, sizeof(int), 1, bin_file);
+		
+		fseek(bin_file, -1 * sizeof(int) * (i + 1), SEEK_END);
+		fread(&x2, sizeof(int), 1, bin_file);
 
+		// Swapping
+		fseek(bin_file, sizeof(int) * i, SEEK_SET);
+		fwrite(&x2, sizeof(int), 1, bin_file);
 
+		fseek(bin_file, -1 * sizeof(int) * (i + 1), SEEK_END);
+		fwrite(&x1, sizeof(int), 1, bin_file);
+	}
+
+	fclose(bin_file);
+	puts("\nElements' order in the file have been reversed.");
 }
 
 void file_opening_check(FILE* file)
