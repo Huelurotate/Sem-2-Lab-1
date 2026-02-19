@@ -336,7 +336,6 @@ void insert_numbers(char* filename, int* total_numbers)
 void manual_insert(char* filename, int* total_numbers)
 {
 	FILE* bin_file = fopen(filename, "ab");
-
 	file_opening_check(bin_file);
 
 	while (1)
@@ -369,7 +368,6 @@ void manual_insert(char* filename, int* total_numbers)
 void random_insert(char* filename, int* total_numbers)
 {
 	FILE* bin_file = fopen(filename, "ab");
-
 	file_opening_check(bin_file);
 
 	int random_length = (rand() % (RAND_LEN_MAX - RAND_LEN_MIN + 1)) + RAND_LEN_MIN;
@@ -390,25 +388,43 @@ void random_insert(char* filename, int* total_numbers)
 
 void bubble_sort(char* filename, int total_numbers)
 {
-	FILE* bin_file = fopen(filename, "rb");
+	FILE* bin_file = fopen(filename, "rb+");
+	file_opening_check(bin_file);
+
 	int x1 = 0, x2 = 0;
-	for (int i = 0; i < total_numbers; i++)
+	int swapped;
+
+	for (int i = 0; i < total_numbers - 1; i++)
 	{
-		fread(x1, sizeof(int), 1, bin_file);
-		fread(x2, sizeof(int), 1, bin_file);
-		if (x2 > x1)
+		swapped = 0;
+		for (int j = 0; j < total_numbers - i - 1; j++)
 		{
-			fseek(bin_file, (0 - sizeof(int) * 2), SEEK_CUR);
-			fwrite(&x2, sizeof(int), 1, bin_file);
-			fwrite(&x1, sizeof(int), 1, bin_file);
-			fseek(bin_file, (0 - sizeof(int) * 2), SEEK_CUR);
+			fread(&x1, sizeof(int), 1, bin_file);
+			fread(&x2, sizeof(int), 1, bin_file);
+			if (x2 > x1)
+			{
+				fseek(bin_file, -2 * sizeof(int), SEEK_CUR);
+				fwrite(&x2, sizeof(int), 1, bin_file);
+				fwrite(&x1, sizeof(int), 1, bin_file);
+				fseek(bin_file, -1 * sizeof(int), SEEK_CUR);
+
+				swapped = 1;
+			}
+			else fseek(bin_file, -1 * sizeof(int), SEEK_CUR);
 		}
-		fseek(bin_file, sizeof(int), SEEK_CUR);
+		if (swapped == 0)
+			break;
+
+		rewind(bin_file);
 	}
+
+	fclose(bin_file);
 }
 
 void perform_reverse(char* filename, int total_numbers)
 {
+	FILE* bin_file = fopen(filename, "rb+");
+
 
 }
 
